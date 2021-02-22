@@ -1,0 +1,456 @@
+-------------------------------------------------------------------------------------
+Section 2: introduction
+
+Gonna build a walking skeleton in this section
+
+A walking skeleton is a tiny implementation of the system that performs a small end-to-end function.
+It need not use the final architecture, but it should link together the main architectural components.
+The architecture and the functionality can then evolve in parallel.
+
+In simple terms: We're gonna have some data in a database. Gonna create an API project that's gonna be
+able to fetch that data out of the database. Then we're gonna create an Angular project that's gonna query
+the API and receive the data from the API, data that comes from the database. Then we're gonna display it
+in the client's browser.
+
+Keep it simple in the beginning and add complexity as we go along the course.
+
+Learning goals: 
+Implement the basic API functionality and have an introductory understanding of:
+ - Using the dotnet CLI (1)
+ - API Controllers and Endpoints (2)
+ - Entity Framework (3)
+ - API Project structure (4)
+ - Configuration and Environment variables (5)
+ - Source Control (6)
+
+-------------------------------------------------------------------------------------
+Section 2: Creating our first entity
+
+We're gonna create a Dating App, and it's obvious that this web app is gonna contain users
+This is the first thing we're gonna create
+Creating a new folder called Entities; this maintains organisation in our code
+An entity is an abstraction of a physical thing
+A physical thing in our application is an user
+So we're gonna create a User entity first
+We call the file/class AppUser because User is used alot in the coding world, so we can see clear seperation 
+In the class we're gonna declare properties (use prop tab for shortcut ofc) and for the primary key we use an int called Id
+We use Id because Entity Framework will recognize the name you gave to this property when generating a database for example
+EF has certain conventions in naming so just follow along with the course instructor
+We create a second property called UserName and is of type string.
+
+Properties also have an access setting and public means it can be get or set by any other class in our app
+Properties that are protected means that it can be accessed from the class it is made in, or that are inherited from this class
+Properties that are private, are only accessible inside the class itself
+
+Now that we have made a simple blueprint/entity for a AppUser, we can use Entity Framework
+
+--------------------------------------------------------------------------------------
+Section 2: Introduction to Entity Framework
+
+What is Entity Framework? EF is an Object Relational Mapper (ORM)
+It translates our code into SQL commands that update our tables in the database
+Before EF way back in the day, we used ADO and it was way more time consuming to sum it up
+Microsoft created EF to automate all those database actions surrounding an app
+
+Now we have an Entity called AppUser
+We're gonna introduce EF and create an import class that derives from the DbContext class that's in EF
+The DbContext class acts as a bridge between the domain (Entity classes) and the database
+The DbContext class is the primary class we use to interact with our database
+
+What EF does is that it allows us to write LINQ queries
+For example we have this line of code: DbContext.Users.Add(new User {Id = 4, Name = John})
+This means that we have added the AppUser Entity to the DbContext class, and with the Add function we can add a new User with Id of 4 and UserName John
+
+EF works with Database Providers. The one we use in this course purely for development is SQLite. Because of using this we don't need to install a server, and it just uses a file
+SQLite is not really production worthy, but it is very good for development because it is portable and easy to use
+The SQLite DB Provider is responsable for translating a LINQ query in the example, into a SQL command in the example
+
+EF Feature summary:
+ - It features querying; writing LINQ queries and translate them into SQL commands with DB Providers
+ - Change tracking; keep track of changes occuring
+ - Allows us to save the database and gives us Insert, Update, and Delete commands and the DbContext class gives a SaveChanges() method we can use
+ - Gives us concurrency. It uses optimistic concurrency by default to prevent overwriting changes made by another user
+ - Also deals with transactions and provides automatic transaction management while querying or saving data
+ - First level caching out of the box. Repeated querying will return data from the cache instead of hitting the database
+ - Built-in conventions: includes default rules to automatically configure the Entity Framework schema
+ - Configuring the Entities, and there are ways to configure to overwrite the standard conventions
+ - Migrations: gives us the ability to create a database schema, and automatically create a database in our database server
+
+--------------------------------------------------------------------------------------
+Section 2: Adding EF to our project
+
+Gonna install EF in our API project
+First we need to install a VSCode extension which allows us to browse in Nuget packages, and its called Nuget Gallery
+Then we install the Microsoft.EntityFrameworkCore.Sqlite package, and it will be included in the API.csproj file as an ItemGroup element
+
+--------------------------------------------------------------------------------------
+Section 2: Adding a DbContext class
+
+We're creating the important DbContext class here which creates the bridge between code and our database
+Creating a folder in the API project and call it Data
+Any data related classes will be in that folder
+Creating a class in the folder called DataContext.cs 
+In here we're gonna derive from the DbContext class, and import/using the Microsoft.EntityFrameworkCore class
+
+Now we create a constructor inside the DataContext class. We can use the quick fix for this and generate a constructor
+The VSCode C# extension does this and sees what different options it has available
+We now have a DataContext function and whenever this class is initiated, the constructor will be run and leave it as it is when it was generated
+The parameters are all it needs now. We just need to pass some options
+
+In this class we also need to add a DbSet
+Create a property, and it will be of type DbSet and this takes the type of the class we want to create a database for
+In our case this will be the AppUser class and next to the type specification we call/name the table we want to create in the database: Users
+We need to insert using API.Entities otherwise the AppUser class is not recognized
+
+Now we need to go to the Startup.cs class and call for the DataContext class to initialize it
+We want to inject the DataContext class, so we're gonna use the ConfigureServices function
+Specify services and in here call the AddDbContext function and specify the DataContext class as a type
+Give parameter options => {  }
+This is a LAMBDA expression and are commonly used when we want to give an expression as a parameter
+The options is the parameter, which we then pass to a statement block which we have inside the curly braces
+Inside the statement we use the UseSqlite function which is inside the options parameter, and in the UseSqlite function we pass the connection string
+
+--------------------------------------------------------------------------------------
+Section 2: Creating the Connection string
+
+Add a connection string to SQlite so we can actually connect to our database from our application
+We add this to our configuration files
+We're gonna add this to the appsettings.Development.json because the info will not contain any passwords etc
+It's essential that the ConnectionStrings is spelled exactly like that, and inside the curly braces we also specify the first string with 
+the default connection as DefaultConnection and the value in that DefaultConnection string. Needs to be "Data source=datingapp.db"
+SQlite we just need to specify the file and the name and file extension
+Now we need to pass this configuration written in the appsettings.json in the Startup class
+We're injecting our configuration into the Startup.cs
+The course instructor does not like the way Microsoft has made this by default so we're gonna change some things
+We remove the line that is under the Startup method and in the method itself and change it to _config = config. Change some settings in VSCode so it does this every time
+Now we have the _config initialized and we can use the GetConnectionString method and pass the DefaultConnection we made in the appsettings.json
+
+In order to actually create and use our database now we need to install a tool to do so.
+We need to install EF with the nuget package website and now we can use it in the CLI
+We write the migration and we create a public class in a file called InitialCreate, it's derived from the Migration class
+
+--------------------------------------------------------------------------------------
+Section 2: Creating the database using EF Code First migrations
+
+We use ef tools again in the CLI. Now we run dotnet ef database update
+It creates the database with this command and checks for migrations and updates the migration history
+Now we install a SQlite tool with nuget, and we can add a .db file so we can see the database in a nice viewer
+Now we can practice a query and do a MySQL insert data query.
+
+We right click on the Users table and do an insert query with sqlite
+When the queries are done and we inserted 3 rows with all an Id and a UserName,
+we can open the table and see those 3 entries in there now
+
+--------------------------------------------------------------------------------------
+Section 2: Adding a new API Controller
+
+For an example we can take a look at the WeatherForecastController.cs
+The [ApiController] marks that this class is of this specific type
+This adds certain things to our controller that course instructor will talk about shortly
+You also need a Route for the ApiController; how is the user going to get to the ApiController from the front-end client
+An (API) Controller also needs to derive from a ControllerBase
+
+Creating our own Controller in the Controller map; UsersController because the route we will make here will be Users or api/users
+ControllerBase is part of the Mvc class in AspNetCore and stands for ModelViewController
+The controller we make is an API controller
+The view is gonna come from our client; going to be using Angular to build the view of our application
+
+Now we're gonna give our new UsersController class some attributes; [ApiController] and [Route("api/[controller]")]
+So now in order to get to this Controller, the client will need to specify always: api/[controller], in this case Users/users
+
+With this controller we want to get some data from our database, and to do this we're gonna use dependancy injection
+First we generate a constructor for the UsersController
+The parameter we give this constructor is we use the DataContext class made before, and declare context of type DataContext
+We then create a private readonly variable called _context which we before also set up in settings and then we put that in the context parameter
+
+In this Controller we will add 2 endpoints. We'll add an endpoint to get all of the users in our database, and an endpoint to get a specific user in our database
+We use the attribute [HttpGet] because we need to get information/data of all the users in the first endpoint
+We make an ActionResult with the IEnumerable interface of type AppUser. Sort of a list but it is different and smaller to initialize. We wont need a List type for this now
+Then we write a method called GetUsers() { } and return _context.Users.ToList() to get all the users in the database and make them into a list with the LINQ method ToList()
+If we now go to the route api/users, we will see all the users in the database added with the insert query we did before. We made this route with the controller and the
+HttpGet attributed ActionResults that are in here
+
+We can see the api/users url in the browser and return all the users on this page, but a more common practice is using Postman to see more neatly formatted JSON and performance etc
+Just open Postman and type the url we just made
+
+--------------------------------------------------------------------------------------
+Section 2: Making our code Asynchronous
+
+We're returning data from our API but what we have written is not 100% best practice
+We made synchronous code in the UsersController
+What this means is when we make a request that goes to our database, then the thread that is handling this request is currently blocked until the database request if fulfilled
+Blocking a thread for this kind of operation is not a good thing says the course instructor. In modern web servers they are multi threaded. If you got an apache web server you will
+have a hundred/hundreds of threads available. That is do-able but imagine if you had thousands of users requesting this kind of query at the same time all day long. Say you have a 100
+threads available Apache web server. It will be wasting the resources available.
+
+What we can do to (try and) tackle this problem is making the code Asynchronous
+When we make a request now, the thread goes and gets the data and serves that data now
+But in the meantime, if anyone else hits the particular endpoint api/users for example, i'm gonna serve that request and if they also want something from the database
+i'm gonna pass that off to another thread aswell. What this async code does; makes it instantly more scalable so we make it asynchronous, especially code that goes to the database
+
+The general guidance is: if you are making database calls; always make that code asynchronous because it's a neglegable performance hit
+If your application requires from you to make it scalable, for example you get alot of customers, you will need to refactor your code etc.
+
+Now we're gonna make the code we wrote for the users return async
+First we specify the async keyword after public in the ActionResult function
+Then we wrap the ActionResult typing in a Task<>
+We get a warning, because we need to use the System.Threading.Tasks class in our file at the top
+After we done that we still get a warning that we're missing 'await' operators and this means it will still run synchronously
+We need to tell return line of code that we "want to wait". After inserting await we still get an error because ToList() is not compatible and not an async function to sum it up
+We need to use the Async version of this function and use ToListAsync() which is in a slightly other namespace and just include that namespace
+We're just telling to return the list of users asynchronously instead of synchronously
+
+So what this code reads:
+When a request goes to the database; it pauses/waits. The request is deferred to a Task<> which goes and make the request to the database
+When the Task gets back/returns we need to get the results from this Task and we do that by using the await keyword now.
+To get the results of a Task we await it and then it's gonna unwrap itself from the task and return the list of users in this case
+
+Do the same for the GetUser function aswell: Add async keyword behind public > wrap the ActionResult in a Task > add await keyword to the return > make Find in Findasync
+Application is at the moment too small to actually see a significant difference but learning this approach is important because it is more efficient and performant
+
+--------------------------------------------------------------------------------------
+Section 2: Saving our code into Source control
+
+There are numerous reasons why to use Source control; backups of your code, version control, see a history of your code while you are developing
+Makes your code sharable. Make it public to an open-source Git repository; a source-code repo where we can share, get feedback from others, collaborate with others
+For this course it's mainly to back-up our code and this is very important aswell
+If you want to access your code on another pc/laptop or other system it's very easy to clone it on this device
+
+Gonna use Git. Most common used source control software that the vast majority of developers use. Git-scm.com
+Install it via that website and just follow the instructions
+Don't forget to change the environment variables in windows to use the git keyword/command in the cmd prompt globally
+After that we can use git init on the DatingApp folder
+Then we use dotnet new gitignore to generate a file which ignores a bunch of files which are not needed to push to a repository 
+This can be for compacter memory size of the repository, or credential files we don't want to share with the public like API keys
+ 
+In the .gitignore we're gonna add appsettings.json file because later on we will use this file as a place to store API keys in
+Now we add it on the bottom of the file and you will see appsettings.json turn grey because we included it in the .gitignore
+
+In VSCode there is a 'SCM' tab and here we can use Git functionality and for example stage all our files and commit them
+Now we need to push the code and we will do that next by creating a new Github repository
+
+--------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------
+Section 3: Introduction
+
+Here we're gonna continue to work on the walking skeleton and complete our end-to-end functionality so we have our API and our client prepared for when
+we build the rest of our application
+
+Complete the walking skeleton and have an introductory understanding of:
+ - Using the Angular CLI
+ - How to create a new Angular app
+ - Angular project files
+ - The Angular bootstrap process
+ - Using the Angular HTTP Client service
+ - Running an Angular app over HTTPS
+ - How to add packages using NPM; for example Bootstrap and Fontawesome in this course
+
+--------------------------------------------------------------------------------------
+Section 3: Creating the Angular application
+
+Gonna create the Angular application. We will use the Angular Command Line Interface (CLI)
+Installing it globally and get the latest version of the CLI
+Differences between the versions are mostly small and focused on performance optimizations so no worries
+For the moment downgraded npm to version 6. I think this is because of the bug that was with ng new lately
+When the cli is installed you can enter ng new client to make a new client
+
+--------------------------------------------------------------------------------------
+Section 3: Running the Angular project and reviewing the bootstrap of the app 
+
+Open up a new terminal session and go into the client folder and run ng serve
+This will start up our Angular development server
+It will first compile our typescript files into JavaScript and serve those JS files from memory
+When the server is started it tells that the Live Dev server is listening on a certain port and you can visit that url
+It also tells what JS files have been created with the compiler
+Let's see which files are responsible for showing the client side Angular welcome screen when you ng serve it
+
+With Angular we got a Single Page Application (SPA)
+The single page in the application is the index.html file in the src map
+The interesting thing besides it being a normal HTML file is the body element
+In the body element there is the app-root element
+The app-root element is where Angular comes into play; it's an Angular component that's gonna be loaded in our index.html when our app is running
+We don't see any (Java)scripts in the index.html, but we're gonna take a look at our browser
+When we inspect the page with Dev Tools, we see that the 5 scripts that were compiled when ng serving our application are injected in the page
+by a utility that Angular uses. It's called Webpack and don't need to worry about it too much and it's part of the Angular CLI when we run our application
+
+Let's take a look what's responsible for actually bootstrapping/starting our application
+This <app-root> is our app-root Angular component and if we take a look at our app folder in src
+We can see our Angular files in here 
+The app.component.ts is our app-root component essentially. 
+We have a class in this file called AppComponent, and in here we have a class property title and it equals 'client'
+Above the class we have the @Component({}) and that's called a decorator
+TypeScript supports Decorators and it's a way of giving a normal class some 'extra powers'. In this case it gives our 'normal' class the ability to be
+an Angular component
+This provides some configuration metadata how the component should be processed, instantiated, and used at runtime
+Angular works with the concept of components. Components are the most basic UI building block of an Angular app
+In the decorator we have some properties that we can assign some value to like the selector, templateUrl, and styleUrls
+For writing HTML and CSS you can do this in an app.component.ts type of file, but best-practice is to seperate it in a loose templateUrl and styleUrl(s)
+We can delete every line of code out of the app.component.html because we don't need any of it anymore for our project
+Just replacing it with a temporary Dating app h1 element and it will automatically save our changes because of auto saving and webpack is watching your changes
+
+We can also pass data from our Angular components to our app.component.html view; the template itself
+The way we do this in this lesson is with interpolation. We can just assign a value to a property inside the component.ts and use it in the template file
+with interpolation. It gets this property from the AppComponent class. This way of data binding is the point of Angular, otherwise what is the point
+
+What we wanna know now is: How does the starting component app-root get bootstrapped onto the index.html template page?
+Our browser doesn't know by itself what the <app-root> element is. It needs some help and it's gonna get that from our JavaScript file(s) 
+
+Every Angular application has to have atleast 1 module. In our case we got a root module that's the app.module.ts
+Inside this app.module.ts file we have a TS Decorator that tells this is an (Angular)Module with @NgModule({ })
+This NgModule declares the components that are available in our application and they go in the declarations: [] array
+We can also import other Angular modules into other modules and make use of them in our application
+In this case we (only) have the BrowserModule so our app can be displayed in our browser, and AppRoutingModule which we discuss later (for routing i think)
+
+Then we have a bootstrap: [] array that bootstraps any Components when our application starts/loads. It loads when our module itself is bootstrapped
+In our current case we are bootstrapping the AppComponent and that is the one we see in our index.html file; the <app-root>
+
+Let's see what bootstraps the bootstrapper. 
+We go to the main.ts where this happens. What we have inside here is platformBrowserDynamic() which serves the code to bootstrapModule our AppModule
+Once the AppModule is bootstrapped, our AppComponent is bootstrapped and our AppComponent is declared as a selector inside the index.html
+With Angular we're developing a TypeScript application so we need a tsconfig.json file that gives TypeScript our configuration
+One thing in this file to point out is to enable "experimentalDecorators". That's how we are able to use @Decorators in our TS/NG classes
+Decorators are currently not supported by JS by default, and there are ways to make it understandable. In TypeScript we make it known by enabling that expDecorators
+We also have a "target": "es2015" > What is our code going to be compiled to? This is the JS version it will be compiled to. If older browser visits, NG will
+recognize this, and give the client an older version of JavaScript. The size will be bit bigger but the browser will understand it
+
+Another file we will come across is the angular.json. This provides our Angular CLI configuration and if we wanna add some extra scripts or styles we will come here
+For the biggest part of the course we're gonna focus on the building blocks of any Angular application and that's mostly going to be Components
+
+--------------------------------------------------------------------------------------
+Section 3: VSCode extensions to work with Angular
+
+3 extensions that are useful: Angular Language Service for info on properties, error messages etc.
+Bracket Pair Colorizer 2 to better differentiate where a bracket starts and ends and for nested code this is very handy
+Angular Snippets 11 by John Papa is handy for intellisense kind of typing your code
+
+--------------------------------------------------------------------------------------
+Section 3: Making HTTP requests in Angular
+
+Taking a look at making a HTTP request from our Angular component and fetching the data from our API
+We need to add a Module from Angular to help us do this. This is the HttpClientModule, and we need to manually import it from '@angular/common/http'
+What we're gonna do is to use our AppComponent to fetch the data and letting the data display on our template/page
+
+Angular uses Dependency Injection just like we used it in .NET Core. The way we use dependency injection in Angular is by using the constructor injection,
+we also did this in our .NET core application. What we do in the constructor is; declare the thing we're about to inject as a private/public variable,
+give it a name and in our case just http. We specify a colon like http: and then we specify the HttpClient class. This class performs HTTP requests, 
+and is available as an injectable class. It contains methods to perform HTTP requests.
+
+When we make an HTTP request to an API this naturally is an asynchronous request. Gonna take some time to fetch the data wherever it is stored and bring it back
+to us (the client). There's a good way to do this in an Angular component. The constructor setup we just made is mostly considered "too early". We want to construct
+the component first of all and make sure that we got the HTTP service available. You could do it in the constructor but it's just considered too early.
+
+Angular comes with lifecycle events. The lifecycle event that takes place after the constructor is known as the initialization.
+What we can do in order to use that lifecycle event is to say that the AppComponent implements OnInit. It's an interface and a lifecycle hook that is 
+called after Angular has initialized all data-bound properties of a directive. And basically it just comes after the constructor
+When we implement it we get a red line/error message under AppComponent.
+
+It tells us that class AppComponent incorrectly implements interface OnInit. When we add an interface it might have some required properties and/or methods.
+The OnInit has a required method that we need to implement. We can focus with the cursor on AppComponent and quick fix this
+
+In this lesson the course instructor will not go fully in-depth on everything that's going on in the code and the CLI and he will go into this later on
+The main goal in this lesson is just to go and get some data. The big concepts here now are TypeScript and what we get back from our HTTP request
+
+TypeScript gives us type safety, unless we use this particular keyword: any. So like users: any; > Our users are of type any. It could be/become any type of data now
+This is a way to effectively turn off type safety in TS. We will be introducing type safety because it is brilliant and it prevents us from making silly mistakes
+For now just so we can go on we're gonna use the any type for our users: property
+We're also gonna remove the : void behind the ngOnInit() method, and this tells the method what it's going to be returning. It tells us that the ngOnInit method isn't
+going to return anything. TS is very good at referring what type of thing/data you will be returning. If you hover over the ngOnInit() method and even though we have removed
+void, it knows it isn't actually returning anything from the code inside of the brackets
+
+Let's make use of the HttpClient/service. We're going to do this in the ngOnInit function and we need to use the this. keyword when we want to access any property inside
+of a class. The http private variable belongs to the AppComponent class because this constructor is inside of this class. So we're going to use this.http and this allows us to
+use the functions inside of this service and there are a bunch.
+
+We're going to GET our users and that's why we will be using the HTTP get method. The get method expects some parameters and it wants the URL where it's gonna get whatever we 
+are getting as a string. The method actually returns something called an Observable. We're dealing with async code here and the way Angular deals with this is to use Observables
+These are not yet a feature of JS but are a feature of TS. Not going into detail about them now but we're gonna use them to get the data.
+
+To make it short; it's returning an Observable of the response with the response body as an ArrayBuffer. This means in our case that the response body are going to come down in the body
+of the response in the API server as we saw in Postman. This means that our users are gonna be available as soon as we get the data back.
+The first parameter we're going to pass is the API URL where our data is going to be, and be specific in typing the string url because there's no type safety here and the function won't work
+Observables are 'lazy' and dont do anything unless somebody 'subscribes' to them. That's why now we have to use the subscribe() method to go and get our data.
+In the subscribe method we're going to use an arrow function. We will define as a parameter the response and the response is gonna contain the users from our API.
+
+We're going to set the response we are getting from the subscribe method, to the users class property. We say in the response > this.users = response
+What we're also going to do after the closing bracket of the response, is specify error with an arrow function and log the error in the console.log
+We can also add a third function and say when it completes => execute some code, but are not going to do that here.
+
+We now wrote the code inside of the ngOnInit method, but what the course/we rather want to do is use a seperate method and cut the code we made in that method
+We make a getUsers() method and copy the code inside of that method. Inside the OnInit you call the getUsers method with this.getUsers
+Now we initialize this component ofc when we start up the application, but we're not doing anything yet to show those users in the html component/view
+We got 2 errors now in the console. We get a Access to XMLHTTPRequest blocked error and the CORS policy blocks this. You need to present a header on the request resource 
+The error gets logged because we specified this in our getUsers method, and we can see more info on the error there
+
+--------------------------------------------------------------------------------------
+Section 3: Adding CORS support in the API
+
+Encountered our first major problem (we would expect this though)
+CORS policy is a security mechanism and it stands for Cross Origin Resource Sharing
+This is a security mechanism built into all modern web browsers. It basically blocks all HTTP requests from our front-end to any API that is not in the same Origin
+For example localhost running on port 4200 is not in the same origin as localhost running on port 5001; we are not allowed to get resources from something that exists
+in a different Origin, unless that resource itself supplies a header saying that this is OK. 
+
+We're gonna implement this in our Startup.cs class. First we need to add our service for CORS
+We're doing this inside the ConfigureServices method and ordering is not really important there. We add services.AddCors();
+Now we need to place the UseCors() inside the Configure method underneath, and the ordering IS really important and it needs to be between app.UseRouting and UseEndpoints
+Because we need to add Authorization later we also know that the Cors will need to be placed prior to that method aswell so we place it between UseRouting and UseAuthorization
+This is middleware and can take some configuration. We can write an expression as a parameter. For example; (x => ) and x is the Policy we're implementing here
+If we say (x => x. ) we can choose from different options inside. For now we wanna use AllowAnyHeader().AllowAnyMethod().WithOrigins(""), and in the WithOrigins parameter we're gonna 
+specify the origin we allow this request to come from. We know the address of our client and this is localhost:4200 with http infront ofcourse. 
+
+--------------------------------------------------------------------------------------
+Section 3: Displaying the fetched users in the browser
+
+Now we're getting back the users from the API, and we "have" them in our client. Now let's display those users in our app and complete the walking skeleton part.
+The original goal is/was is to have some data in a database, then fetch this data in our client application and then display it in our browser
+
+We have the users property of type any in our app.component.ts, and this is assigned to the response. We can use interpolation to show the data stored in this property in the view
+Gonna make a list with ul and li items. We want to loop through each of the users and just display their details in those list items. What we can do when we're looping over content 
+in Angular is using a structural directive.
+
+Structural directives are something that modifies the Domain Object Model (DOM) in our HTML in some way. Our list items do not exist without users so they are not even part of the DOM 
+until this is executed. We're gonna use the *ngFor directive. We say equals = and then we can add our expression here. We say let user of users. Spell this right because the NG intellisense
+will recognize the properties and red underline your code if you use a fault property. We give this *ngFor directive as an HTML attribute in the element itself. It specifically has to go here
+The let user of users is a for loop actually and loops through all the users in this property. After writing the ngfor directive we use interpolation to access the user and we show the
+user.id and user.username. Those are the two fields made in the Entity. user.id is correct but for user.username we need to make it userName. Because the properties in Angular are case sensitive.
+
+--------------------------------------------------------------------------------------
+Section 3: Adding Bootstrap and font-awesome
+
+Bootstrap is a CSS Framework that helps us lay out things in our HTML pages. There's a JS version of the bootstrap files aswell. Those are js plugins built on jQuery. There's no law against it
+using this approach in an Angular application. The thing with jquery that makes the instructor weary is that Angular manipulates the DOM. jQuery also manipulates the DOM. Angular uses its own 
+change detection in the DOM and recognizes when something changes inside there. When jQuery is manipulating the DOM, Angular's change detection won't work. Long story short: if you mix jQuery
+with Angular you may run into trouble. The advice is now: don't use jQuery here and use something more Angular.
+
+In this course we're gonna use Angular Bootstrap/ngx-bootstrap. From the documentation we're gonna use the CLI install method because it saves us some time
+There was some error in the installation for other course users too and fixed it with an uninstall and install again
+Any files that we install with npm are added to package.json and added to the node_modules folder
+This is grayed out in the git source control because we don't want to push this to a repo because it's map size is too big and would be wasteful
+It also changed something in our styles array in the angular.json 
+There's also added 1 Module in the app.module.ts because Bootstrap takes advantages of Bootstrap Animations to display certain things
+What we also want to use now is an icon set. One that's very popular to use is Fontawesome
+Going to npm install font-awesome. Don't worry about the warnings those are not affecting anything only just annoying to see.
+
+When we go to the browser/running client we see there are no changes yet seen because Angular has not yet refreshed the angular.json, where new files are accumulated
+Just restart the app and you can see the font has changed slightly. Which means it's installed successfully.
+What we're going to do now is enabling Angular of HTTPS.
+
+--------------------------------------------------------------------------------------
+Section 3: Using HTTPS in Angular
+
+Instructor going to show how to use a HTTPS certificate in the browser to show the client is safe
+He has provided us with a folder for this use of a certificate, and there is a server certificate, a server.key file and some other files.
+We can simply add this to our Angular configuration.
+There is a Shell script and an openssl configuration file, but you do need to have openssl installed for this. The certificate and the key are valid for over 20 years
+In the instructions txt there are steps to do to make your system trust this certificate. Follow these from the video and this part is done
+In our client folder we will create a new folder called ssl. Copy the SSL server file and the key into the ssl folder
+Now go to the angular.json file and go to the line 63 and to the "serve" property. We can go and tell the Angular dev server to serve over HTTPS
+Specify the location of the new files we made in SSL map and put this in "sslKey" property.
+We use sslCert property to point to the Certificate .crt file, and use ssl property and set this to true to use ssl by default
+
+
+
+
+
+
