@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using API.Data;
+using API.Extensions;
 using API.Interfaces;
 using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -31,16 +33,9 @@ namespace API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // for HTTP requests it is advised to use AddScoped
-            // testing is the main reason we implement an Interface (here). It would work if you leave out the Interface
-            // AddScoped is scoped to the lifetime of the HTTP request in this case. When the request is finished the service is closed
-            services.AddScoped<ITokenService, TokenService>();
+            // we moved some code to the ApplicationServiceExtensions class and we call that method/extension here
+            services.AddApplicationServices(_config);
 
-            services.AddDbContext<DataContext>(options =>
-            {
-                options.UseSqlite(_config.GetConnectionString("DefaultConnection"));
-            }
-            );
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -48,18 +43,8 @@ namespace API
             });
             services.AddCors();
 
-            // add a service(s) for our authentication
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    // server needs to validate token so tell it to actually sign it
-                    ValidateIssuerSigningKey 
-                }
-            }
-
-            )
+            // defined in the IdentityServiceExtensions file for re-use and clean up
+            services.AddIdentityServices(_config);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -77,6 +62,8 @@ namespace API
             app.UseRouting();
 
             app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200"));
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
