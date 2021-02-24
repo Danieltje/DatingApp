@@ -6,9 +6,11 @@
         <a class="navbar-brand" href="#">Dating App</a>
         
         <!-- We only want to show these nav items if the user is logged in
-             We use an ng structural directive for this 
+             We use an ng structural directive for this
+
+             The main reason to use the async pipe here is to automatically unsubscribe when the service is no longer used/needed
         -->
-          <ul class="navbar-nav me-auto mb-2 mb-md-0" *ngIf="loggedIn">
+          <ul class="navbar-nav me-auto mb-2 mb-md-0" *ngIf="accountService.currentUser$ | async">
             <li class="nav-item">
               <a class="nav-link" href="#">Matches</a>
             </li>
@@ -18,9 +20,6 @@
             <li class="nav-item">
               <a class="nav-link" href="#">Messages</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" (click)="logout()" href="#">Logout</a>
-              </li>
           </ul>
 
           <!-- We need a functionality to show this dropdown menu
@@ -30,7 +29,7 @@
                The toggle is our Welcome user so we give this dropdownToggle directive
                The dropdown menu div will receive the structural directive *dropdownMenu
         -->
-          <div class="dropdown" *ngIf="loggedIn" dropdown>
+          <div class="dropdown" *ngIf="accountService.currentUser$ | async" dropdown>
               <a class="dropdown-toggle text-light" dropdownToggle>Welcome user</a>
               <div class="dropdown-menu mt-3" *dropdownMenu>
                   <a class="dropdown-item">Edit Profile</a>
@@ -46,7 +45,7 @@
 
                The *ngIf structural directive completely removes this form from the DOM when the user is !loggedIn
           -->
-          <form *ngIf="!loggedIn" #loginForm="ngForm" class="d-flex" (ngSubmit)="login()" autocomplete="off">
+          <form *ngIf="(accountService.currentUser$ | async) === null" #loginForm="ngForm" class="d-flex" (ngSubmit)="login()" autocomplete="off">
             <input
                 name="username"
                 [(ngModel)]="model.username"
