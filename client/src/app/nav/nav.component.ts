@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AccountService } from '../_services/account.service';
 
 @Component({
   selector: 'app-nav',
@@ -9,16 +10,26 @@ export class NavComponent implements OnInit {
   // create a class property to store what the users enters into the form
   // model property of type any and initialise this to an empty object
   model: any = {}
+  loggedIn: boolean;
 
-  constructor() { }
+  // inject our account.service.ts into the nav component
+  constructor(private accountService: AccountService) { }
 
   ngOnInit(): void {
   }
 
   login() {
+    // use the account.service to actually login our user
+    this.accountService.login(this.model).subscribe(response => {
+      console.log(response);
+      this.loggedIn = true;
+    }, error => {
+      console.log(error);
+    } )
+  }
 
-    // simply log the values we receive from the form
-    console.log(this.model);
+  logout() {
+    this.loggedIn = false;
   }
 
 }

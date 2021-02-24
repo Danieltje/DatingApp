@@ -1,10 +1,14 @@
+<!-- We took out some elements here that were handling responsiveness when screen size gets smaller
+             This course is aimed at learning particular concepts and building a desktop app and has limits 
+             due to the size of the course. -->
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
     <div class="container">
         <a class="navbar-brand" href="#">Dating App</a>
-        <!-- We took out some elements here that were handling responsiveness when screen size gets smaller
-             This course is aimed at learning particular concepts and building a desktop app and has limits 
-             due to the size of the course. -->
-          <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        
+        <!-- We only want to show these nav items if the user is logged in
+             We use an ng structural directive for this 
+        -->
+          <ul class="navbar-nav me-auto mb-2 mb-md-0" *ngIf="loggedIn">
             <li class="nav-item">
               <a class="nav-link" href="#">Matches</a>
             </li>
@@ -14,21 +18,47 @@
             <li class="nav-item">
               <a class="nav-link" href="#">Messages</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" (click)="logout()" href="#">Logout</a>
+              </li>
           </ul>
+
+          <!-- We need a functionality to show this dropdown menu
+               Normally we would do this with Bootstrap but we don't want to use jQuery in our app
+               Taking an alternative route here
+               We give this dropdown div the dropdown directive
+               The toggle is our Welcome user so we give this dropdownToggle directive
+               The dropdown menu div will receive the structural directive *dropdownMenu
+        -->
+          <div class="dropdown" *ngIf="loggedIn" dropdown>
+              <a class="dropdown-toggle text-light" dropdownToggle>Welcome user</a>
+              <div class="dropdown-menu mt-3" *dropdownMenu>
+                  <a class="dropdown-item">Edit Profile</a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" (click)="logout()" >Logout</a>
+              </div>
+          </div>
 
           <!-- Marking this form with #loginForm=ngForm makes it an Angular form
                ngSubmit is the attribute/eventemitter we specify the method in that gets executed when clicking submit
                Square brackets like [ngModel] are used for receiving from the component and parentheses () are used when
                it goes the other way from the front-end to our component. Both in one [()] is two-way binding
+
+               The *ngIf structural directive completely removes this form from the DOM when the user is !loggedIn
           -->
-          <form #loginForm="ngForm" class="d-flex" (ngSubmit)="login()" autocomplete="off">
+          <form *ngIf="!loggedIn" #loginForm="ngForm" class="d-flex" (ngSubmit)="login()" autocomplete="off">
             <input
                 name="username"
                 [(ngModel)]="model.username"
                 class="form-control me-2" 
                 type="search" 
                 placeholder="Username">
-            <input class="form-control me-2" type="password" placeholder="Password">
+            <input
+                name="password"
+                [(ngModel)]="model.password" 
+                class="form-control me-2" 
+                type="password" 
+                placeholder="Password">
             <button class="btn btn-outline-success" type="submit">Login</button>
           </form>
       </div><!-- .container -->
