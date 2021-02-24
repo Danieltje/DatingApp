@@ -1,4 +1,5 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
+import { AccountService } from '../_services/account.service';
 
 @Component({
   selector: 'app-register',
@@ -6,21 +7,30 @@ import { Component, Input, OnInit } from '@angular/core';
   styleUrls: ['./register.component.css']
 })
 export class RegisterComponent implements OnInit {
-  // we use the Input decorator to pass properties from a parent to child component
-  @Input() usersFromHomeComponent: any;
+
+  // we want to emit a value when we click on the cancel button
+  @Output() cancelRegister = new EventEmitter();
   model: any = {};
 
-  constructor() { }
+  constructor(private accountService: AccountService) { }
 
   ngOnInit(): void {
   }
 
   register() {
-    console.log(this.model);
+    this.accountService.register(this.model).subscribe(response => {
+      console.log(response);
+      this.cancel();
+    }, error => {
+      console.log(error)
+    })
   }
 
   cancel() {
-    console.log('cancelled');
+
+    // we want to put the registerMode property value to false when button clicked, that's why we emit false value here
+    // so we now created an event in the register comp html and ts, now we need steps in home html and ts
+    this.cancelRegister.emit(false);
   }
 
 }

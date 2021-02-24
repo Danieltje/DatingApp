@@ -8,20 +8,20 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HomeComponent implements OnInit {
   registerMode = false;
-  users: any;
 
-  constructor(private http: HttpClient) { }
+  constructor() { }
 
   ngOnInit(): void {
-    this.getUsers();
   }
 
   registerToggle() {
     this.registerMode = !this.registerMode;
   }
 
-  getUsers() {
-    this.http.get('https://localhost:5001/api/users').subscribe(users => this.users = users);
+  // this will take an event of type boolean as parameter because we emit/output this from the register component
+  // then we say, ok put the registerMode property to false again which is in this home comp ts 
+  cancelRegisterMode(event: boolean) {
+    this.registerMode = event;
   }
 
 }

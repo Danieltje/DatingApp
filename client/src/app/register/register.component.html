@@ -8,21 +8,15 @@
     </div>
 
     <div class="form-group">
-        <label> Who is your favourite user? </label>
-        <!-- in this select and options we're gonna loop over the users property we passed down from our HomeComponent-->
-        <select class="form-control">
-            <option *ngFor="let user of usersFromHomeComponent" [value]="user.userName">
-                {{ user.userName }}
-            </option>
-        </select>
-    </div>
-
-    <div class="form-group">
         <input type="password" class="form-control" name="password" 
             [(ngModel)]="model.password" placeholder="Password" >
     </div>
     <div class="form-group text-center">
         <button class="btn btn-success mr-2" type="submit">Register</button>
+
+        <!-- We want to tell the home.component.ts that this needs to false again when we want to cancel
+             This is child to parent communication. We're now in the register component map
+        -->
         <button class="btn btn-default mr-2" (click)="cancel()" type="button">Cancel</button>
     </div>
 </form>

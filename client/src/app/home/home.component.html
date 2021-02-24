@@ -11,7 +11,10 @@
     <div *ngIf="registerMode" class="container">
         <div class="row justify-content-center">
             <div class="col-4">
-                <app-register [usersFromHomeComponent]="users"></app-register>
+                <!-- This event is received by the register component. This is because the cancel button and function is made in there
+                     Example of child to parent communication
+                -->
+                <app-register (cancelRegister)="cancelRegisterMode($event)"></app-register>
             </div>
         </div>
     </div>
