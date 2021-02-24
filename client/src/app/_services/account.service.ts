@@ -51,6 +51,7 @@ export class AccountService {
   // we receive the (user) model from our register component
   // making use of the pipe() method again because when a user registers we're considering it
   // logged in to our application
+  // To repeat it; with a pipe we transform data that comes back in an Observable
   register(model: any) {
     return this.http.post(this.baseUrl + 'account/register', model).pipe(
       map((user: User) => {

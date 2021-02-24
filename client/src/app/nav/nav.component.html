@@ -1,25 +1,30 @@
 <!-- We took out some elements here that were handling responsiveness when screen size gets smaller
              This course is aimed at learning particular concepts and building a desktop app and has limits 
              due to the size of the course. -->
-<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-primary">
     <div class="container">
-        <a class="navbar-brand" href="#">Dating App</a>
+        <a class="navbar-brand" routerLink='/' routerLinkActive='active'>Dating App</a>
         
         <!-- We only want to show these nav items if the user is logged in
              We use an ng structural directive for this
 
              The main reason to use the async pipe here is to automatically unsubscribe when the service is no longer used/needed
         -->
-          <ul class="navbar-nav me-auto mb-2 mb-md-0" *ngIf="accountService.currentUser$ | async">
-            <li class="nav-item">
-              <a class="nav-link" href="#">Matches</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Lists</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#">Messages</a>
-            </li>
+          <ul class="navbar-nav me-auto mb-2 mb-md-0" >
+            <!-- The ng-container is a good technique for using conditionals because it doesn't generate any HTML
+                 It won't interfere with any of your styling when you use it
+            -->
+            <ng-container *ngIf="accountService.currentUser$ | async">
+              <li class="nav-item">
+                <a class="nav-link" routerLink='/members' routerLinkActive='active'>Matches</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" routerLink='/lists' routerLinkActive='active'>Lists</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" routerLink='/messages' routerLinkActive='active'>Messages</a>
+              </li>
+            </ng-container>
           </ul>
 
           <!-- We need a functionality to show this dropdown menu
@@ -29,8 +34,8 @@
                The toggle is our Welcome user so we give this dropdownToggle directive
                The dropdown menu div will receive the structural directive *dropdownMenu
         -->
-          <div class="dropdown" *ngIf="accountService.currentUser$ | async" dropdown>
-              <a class="dropdown-toggle text-light" dropdownToggle>Welcome user</a>
+          <div class="dropdown" *ngIf="(accountService.currentUser$ | async) as user" dropdown>
+              <a class="dropdown-toggle text-light" dropdownToggle>Welcome {{ user.username | titlecase }}</a>
               <div class="dropdown-menu mt-3" *dropdownMenu>
                   <a class="dropdown-item">Edit Profile</a>
                   <div class="dropdown-divider"></div>
@@ -58,7 +63,7 @@
                 class="form-control me-2" 
                 type="password" 
                 placeholder="Password">
-            <button class="btn btn-outline-success" type="submit">Login</button>
+            <button class="btn btn-success" type="submit">Login</button>
           </form>
       </div><!-- .container -->
   </nav>
