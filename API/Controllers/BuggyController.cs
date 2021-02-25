@@ -24,7 +24,6 @@ namespace API.Controllers
 
 
         // when trying to get the not-found endpoint it returns a 404 Not Found error
-        [Authorize]
         [HttpGet("not-found")]
         public ActionResult<AppUser> GetNotFound()
         {
@@ -39,7 +38,6 @@ namespace API.Controllers
 
 
         // when trying to execute a get request to this endpoint we get a NullReferenceException
-        [Authorize]
         [HttpGet("server-error")]
         public ActionResult<string> GetServerError()
         {
@@ -58,7 +56,6 @@ namespace API.Controllers
 
 
         // trying to execute a get to this endpoint will return 400 Bad Request with the string attached
-        [Authorize]
         [HttpGet("bad-request")]
         public ActionResult<string> GetBadRequest()
         {

@@ -1,5 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { NotFoundComponent } from './errors/not-found/not-found.component';
+import { ServerErrorComponent } from './errors/server-error/server-error.component';
 import { TestErrorsComponent } from './errors/test-errors/test-errors.component';
 import { HomeComponent } from './home/home.component';
 import { ListsComponent } from './lists/lists.component';
@@ -28,7 +30,9 @@ const routes: Routes = [
   // wildcard route; when not any of the routes specified above is entered
   // pathMatch is used to prevent an endless loop of redirects and matches against the entire URL with 'full'
   {path: 'errors', component: TestErrorsComponent},
-  {path: '**', component: HomeComponent, pathMatch: 'full'},
+  {path: 'not-found', component: NotFoundComponent},
+  {path: 'server-error', component: ServerErrorComponent},
+  {path: '**', component: NotFoundComponent, pathMatch: 'full'},
 ];
 
 @NgModule({
