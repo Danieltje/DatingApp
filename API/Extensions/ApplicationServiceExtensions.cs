@@ -18,6 +18,9 @@ namespace API.Extensions
             // AddScoped is scoped to the lifetime of the HTTP request in this case. When the request is finished the service is closed
             services.AddScoped<ITokenService, TokenService>();
 
+            // add a service for our UserRepository
+            services.AddScoped<IUserRepository, UserRepository>();
+
             services.AddDbContext<DataContext>(options =>
             {
                 options.UseSqlite(config.GetConnectionString("DefaultConnection"));
