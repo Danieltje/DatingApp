@@ -64,7 +64,7 @@ namespace API.Controllers
             // we use SingleOrDefaultAsync because this method also throws an exception
             // FindAsync is only useful if we're getting something with a primary key
             // It looks if we got a user in our database, or it does not have one
-            var user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == loginDto.Username);
+            var user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == loginDto.Username.ToLowerInvariant());
 
             if (user == null) return Unauthorized("Invalid username!");
 
