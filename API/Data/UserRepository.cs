@@ -26,13 +26,18 @@ namespace API.Data
         // we return the user with the username we try to use in the parameter
         public async Task<AppUser> GetUserByUsernameAsync(string username)
         {
-            return await _context.Users.SingleOrDefaultAsync(x => x.UserName == username);
+            return await _context.Users
+            // this will give us a circular reference exception; it's endless as course instructor shows
+            .Include(p => p.Photos)
+            .SingleOrDefaultAsync(x => x.UserName == username);
         }
 
         // method to return all of our users
         public async Task<IEnumerable<AppUser>> GetUsersAsync()
         {
-            return await _context.Users.ToListAsync();
+            return await _context.Users
+            .Include(p => p.Photos)
+            .ToListAsync();
         }
 
         // we return a bool to say if our changes have been saved
