@@ -3,8 +3,8 @@
         <h1>Your profile</h1>
     </div>
     <div class="col-8">
-        <div class="alert alert-info">
-            <p><strong>Information: </strong> You have made changes. Any unsaved changes will be lost</p>
+        <div class="alert alert-info" *ngIf="editForm.dirty">
+            <strong>Information: </strong> You have made changes. Any unsaved changes will be lost
         </div>
     </div>
 
@@ -31,7 +31,8 @@
                 </div>
             </div><!-- .card-body -->
             <div class="card-footer">
-                <button class="btn btn-success btn-block">Save changes</button>
+                <!-- We hook up this button to the form. We give the form element an ID property -->
+                <button [disabled]="!editForm.dirty" form="editForm" class="btn btn-success btn-block">Save changes</button>
             </div>
         </div>
     </div><!-- .col-4 -->
@@ -39,7 +40,7 @@
         <tabset class="member-tabset">
             <tab heading='About {{member.knownAs}}'>
                 <!-- Making it an Angular form and giving it a ng reference value with ngForm to do that -->
-                <form #editForm="ngForm">
+                <form #editForm="ngForm" id="editForm" (ngSubmit)="updateMember()">
                     <h4>Description</h4>
                     <textarea class="form-control" [(ngModel)]="member.introduction" name="introduction" rows="6"></textarea>
                     <h4 class="mt-2">Looking for</h4>
