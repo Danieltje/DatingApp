@@ -8,6 +8,7 @@ import { ThisReceiver } from '@angular/compiler';
 import { Injectable } from '@angular/core';
 import { ReplaySubject } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { environment } from 'src/environments/environment';
 import { User } from '../_models/user';
 
 // this decorator makes it possible so our services can be injected into other components/services in our app
@@ -15,7 +16,7 @@ import { User } from '../_models/user';
   providedIn: 'root'
 })
 export class AccountService {
-  baseUrl = 'https://localhost:5001/api/';
+  baseUrl = environment.apiUrl;
 
   // create an Observable to store our User in
   /* We use a special type of Observable called ReplaySubject. This is kind of like a buffer object.
