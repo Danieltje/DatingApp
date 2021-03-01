@@ -1,6 +1,7 @@
 using System.Linq;
 using API.DTOs;
 using API.Entities;
+using API.Extensions;
 using AutoMapper;
 
 namespace API.Helpers
@@ -19,7 +20,8 @@ namespace API.Helpers
                    that Is also Main (the user's main picture), and get the Url from that
                  */
                 .ForMember(dest => dest.PhotoUrl, opt => opt.MapFrom(src => 
-                src.Photos.FirstOrDefault(x => x.IsMain).Url)); 
+                src.Photos.FirstOrDefault(x => x.IsMain).Url))
+                .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.DateOfBirth.CalculateAge()));
             CreateMap<Photo, PhotoDto>();
         }
     }

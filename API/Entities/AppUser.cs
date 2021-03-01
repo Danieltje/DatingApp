@@ -55,10 +55,11 @@ namespace API.Entities
         // Going to make a method inside our Entity class. We want to extend the methods inside the DateTime class
         // so we can use that to calculate the age of a user and this is available when we need it
         // it will calculate the age based on the date of birth
-        public int GetAge()
-        {
-            // we wrote the CalculateAge method in the DateTimeExtensions
-            return DateOfBirth.CalculateAge();
-        }
+        
+        // public int GetAge()
+        //{
+        //   we wrote the CalculateAge method in the DateTimeExtensions
+        //   return DateOfBirth.CalculateAge();
+        //}
     }
 }
