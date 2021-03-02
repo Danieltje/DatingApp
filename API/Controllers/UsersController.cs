@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using API.Data;
 using API.DTOs;
@@ -40,6 +41,28 @@ namespace API.Controllers
         {
             // returning a member Dto directly from our repository
             return await _userRepository.GetMemberAsync(username);
+        }
+
+        // We use an Http PUT method to update a resource in our server
+        // The client has all the data related to the entity we want to update
+        // We don't need to return the object back from our API
+        [HttpPut]
+        public async Task<ActionResult> UpdateUser(MemberUpdateDto memberUpdateDto)
+        {
+            /* Find the claim that matches the name identifier. That's the claim we give the user in their token
+               This should give us the username from the token 
+            */
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userRepository.GetUserByUsernameAsync(username);
+
+            // this saves us manually mapping between our updatedto and user object
+            _mapper.Map(memberUpdateDto, user);
+
+            // here the user object gets flagged as being updated by EF
+            _userRepository.Update(user);
+
+            if (await _userRepository.SaveAllAsync()) return NoContent();
+            return BadRequest("Failed to update user");
         }
 
     }

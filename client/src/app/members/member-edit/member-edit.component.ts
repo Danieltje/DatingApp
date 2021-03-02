@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { take } from 'rxjs/operators';
@@ -20,6 +20,13 @@ export class MemberEditComponent implements OnInit {
   member: Member;
   user: User;
   
+  // we can access Browser Events with this, so we can prevent the user from visiting another website f.e. and losing their changes
+  @HostListener('window:beforeunload', ['$event']) unloadNotification($event:any) {
+    if (this.editForm.dirty) {
+      $event.returnValue = true;
+    }
+  }
+
   // we need to fetch the the current user (accountservice)
   // and with that we need to get the username, so we can get the username and go and fetch that particular member (memberservice)
   constructor(private accountService: AccountService, private memberService: MembersService,
@@ -39,9 +46,13 @@ export class MemberEditComponent implements OnInit {
   }
 
   updateMember() {
-    console.log(this.member);
-    this.toastr.success('Profile updated successfully');
-    this.editForm.reset(this.member);
+    this.memberService.updateMember(this.member).subscribe(() => {
+      this.toastr.success('Profile updated successfully');
+
+      // update the dirty status of the form itself
+      this.editForm.reset(this.member);
+    })
+    
   }
 
 }
