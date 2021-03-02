@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 using API.Data;
 using API.DTOs;
 using API.Entities;
+using API.Extensions;
 using API.Interfaces;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,10 +20,13 @@ namespace API.Controllers
     {
         private readonly IUserRepository _userRepository;
         private readonly IMapper _mapper;
+        private readonly IPhotoService _photoService;
 
         // inject the interface we get from AutoMapper inside here
-        public UsersController(IUserRepository userRepository, IMapper mapper)
+        public UsersController(IUserRepository userRepository, IMapper mapper,
+            IPhotoService photoService)
         {
+            _photoService = photoService;
             _mapper = mapper;
             _userRepository = userRepository;
         }
@@ -36,7 +41,7 @@ namespace API.Controllers
             return Ok(users);
         }
 
-        [HttpGet("{username}")]
+        [HttpGet("{username}", Name = "GetUser")]
         public async Task<ActionResult<MemberDto>> GetUser(string username)
         {
             // returning a member Dto directly from our repository
@@ -50,9 +55,11 @@ namespace API.Controllers
         public async Task<ActionResult> UpdateUser(MemberUpdateDto memberUpdateDto)
         {
             /* Find the claim that matches the name identifier. That's the claim we give the user in their token
-               This should give us the username from the token 
+               This should give us the username from the token
+
+               In section 11 we made the GetUsername method to encapsulate the code
             */
-            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var username = User.GetUsername();
             var user = await _userRepository.GetUserByUsernameAsync(username);
 
             // this saves us manually mapping between our updatedto and user object
@@ -65,5 +72,45 @@ namespace API.Controllers
             return BadRequest("Failed to update user");
         }
 
+        // Using a Http POST method because we are creating a new resource
+        [HttpPost("add-photo")]
+        public async Task<ActionResult<PhotoDto>> AddPhoto(IFormFile file)
+        {
+            // Getting our user, we're eagerly loading them with the Get..Async method
+            var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
+
+            // We get our result back from the photoService
+            var result = await _photoService.AddPhotoAsync(file);
+
+            // Check and see the result; if we get an Error we're returning a Bad Request
+            if (result.Error != null) return BadRequest(result.Error.Message);
+
+            // If no error, create a new Photo
+            var photo = new Photo
+            {
+                Url = result.SecureUrl.AbsoluteUri,
+                PublicId = result.PublicId
+            };
+
+            // Is it the first photo the user is uploading? Make it IsMain photo true
+            if (user.Photos.Count == 0)
+            {
+                photo.IsMain = true;
+            }
+
+            // We Add the photo
+            user.Photos.Add(photo);
+
+            // Returning the photo
+            if (await _userRepository.SaveAllAsync())
+            // We don't want to return here immediately, we need to wrap this in something
+            {
+               // Now we will return a 201, that's the Created response
+                return CreatedAtRoute("GetUser", new {Username = user.UserName} ,_mapper.Map<PhotoDto>(photo));
+               
+            }
+                
+            return BadRequest("Problem adding photo");
+        }
     }
 }

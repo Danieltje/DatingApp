@@ -14,10 +14,15 @@ namespace API.Extensions
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config)
         {
+            /* A way to strongly-type our configuration settings for Cloudinary */
+            services.Configure<CloudinarySettings>(config.GetSection("CloudinarySettings"));
+
             // for HTTP requests it is advised to use AddScoped
             // testing is the main reason we implement an Interface (here). It would work if you leave out the Interface
             // AddScoped is scoped to the lifetime of the HTTP request in this case. When the request is finished the service is closed
             services.AddScoped<ITokenService, TokenService>();
+            
+            services.AddScoped<IPhotoService, PhotoService>();
 
             // add a service for our UserRepository
             services.AddScoped<IUserRepository, UserRepository>();
