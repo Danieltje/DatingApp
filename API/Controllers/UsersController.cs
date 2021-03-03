@@ -136,5 +136,37 @@ namespace API.Controllers
             if (await _userRepository.SaveAllAsync()) return NoContent();
             return BadRequest("Failed to set main photo");
         }
+
+        // Deleting a photo (resource)
+        [HttpDelete("delete-photo/{photoId}")]
+        public async Task<ActionResult> DeletePhoto(int photoId)
+        {
+            // Getting the user object where we delete the photo from
+            var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
+
+            // We delete the photo we know due the photoId it gets when uploading, so look for a photoId which you give with the parameter
+            var photo = user.Photos.FirstOrDefault(x => x.Id == photoId);
+
+            // If value of photo is null; return Not Found 
+            if (photo == null) return NotFound();
+
+            if (photo.IsMain) return BadRequest("You cannot delete your main photo");
+
+            // If the photo has a PublicId from Cloudinary, use the DeletePhotoAsync method to remove it from Cloudinary
+            if (photo.PublicId != null)
+            {
+               // If it has a problem removing the photo from Cloudinary, return and give an Error message
+               var result = await _photoService.DeletePhotoAsync(photo.PublicId);
+               if (result.Error != null) return BadRequest(result.Error.Message);
+            }
+
+            user.Photos.Remove(photo);
+
+            // If all succeeds, save it to the database and return Ok
+            if (await _userRepository.SaveAllAsync()) return Ok();
+
+            return BadRequest("Failed to delete");
+        }
+
     }
 }
