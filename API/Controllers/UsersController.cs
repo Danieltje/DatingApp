@@ -112,5 +112,29 @@ namespace API.Controllers
                 
             return BadRequest("Problem adding photo");
         }
+
+        [HttpPut("set-main-photo/{photoId}")]
+        public async Task<ActionResult> SetMainPhoto(int photoId)
+        {
+            var user = await _userRepository.GetUserByUsernameAsync(User.GetUsername());
+
+            // We have access to the Photos because we do eager loading inside the GetUserByUsernameAsync
+            // We already went into the database in the userRepository, here we already have the users so we search in it
+            var photo = user.Photos.FirstOrDefault(x => x.Id == photoId);
+
+            if (photo.IsMain) return BadRequest("This is already your main photo");
+
+
+            var currentMain = user.Photos.FirstOrDefault(x => x.IsMain);
+
+            // Turn off the currentMain photo
+            if (currentMain != null) currentMain.IsMain = false;
+
+            // Turn on the new Main photo we want to set in this method
+            photo.IsMain = true;
+
+            if (await _userRepository.SaveAllAsync()) return NoContent();
+            return BadRequest("Failed to set main photo");
+        }
     }
 }

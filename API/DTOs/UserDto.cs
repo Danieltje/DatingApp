@@ -5,6 +5,9 @@ namespace API.DTOs
     public class UserDto
     {
         public string Username { get; set; }
-        public string Token { get; set; }     
+        public string Token { get; set; }
+
+        // new Dto property to return the Main photo in the nav
+        public string PhotoUrl { get; set; }     
     }
 }

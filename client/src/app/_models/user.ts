@@ -10,4 +10,7 @@
 export interface User {
     username: string;
     token: string;
+
+    // adding the photoUrl for the main photo we return in the nav
+    photoUrl: string;
 }
