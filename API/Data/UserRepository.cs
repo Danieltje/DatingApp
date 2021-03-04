@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using API.DTOs;
 using API.Entities;
+using API.Helpers;
 using API.Interfaces;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -33,11 +34,18 @@ namespace API.Data
                 .SingleOrDefaultAsync();
         }
 
-        public async Task<IEnumerable<MemberDto>> GetMembersAsync()
+        public async Task<PagedList<MemberDto>> GetMembersAsync(UserParams userParams)
         {
-            return await _context.Users
+            /* On this stage this query is a IQueryable. This is an expression tree that is gonna go to
+               EF. EF will actually build it up as an expression tree. Then (before) when we execute the ToListAsync()
+               it will actually execute the query
+
+               This is a list we're only ever going to read from. Not doing anything else with these en
+             */
+            var query = _context.Users
                 .ProjectTo<MemberDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
+                .AsNoTracking();
+            return await PagedList<MemberDto>.CreateAsync(query, userParams.PageNumber, userParams.PageSize);
         }
 
         // we return the user with the ID we try to use in the parameter
