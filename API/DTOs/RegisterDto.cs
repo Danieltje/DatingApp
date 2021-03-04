@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace API.DTOs
@@ -9,8 +10,12 @@ namespace API.DTOs
     {
         // For DTOs it's not highest priority to call it UserName with the two capitals, it's not as strict as AppUser
         // Data annotations
-        [Required]
-        public string Username { get; set; }
+        [Required] public string Username { get; set; }
+        [Required] public string KnownAs { get; set; }
+        [Required] public string Gender { get; set; }
+        [Required] public DateTime DateOfBirth { get; set; }
+        [Required] public string City { get; set; }
+        [Required] public string Country { get; set; }
 
         [Required]
         [StringLength(8, MinimumLength = 4)]

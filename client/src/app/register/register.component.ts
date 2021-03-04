@@ -16,12 +16,17 @@ export class RegisterComponent implements OnInit {
 
   // Setting up our Reactive Form. FormGroup type tracks the value and validity state of a group of FormControl instances
   registerForm: FormGroup;
+  maxDate: Date;
 
   constructor(private accountService: AccountService,
      private toastr: ToastrService, private fb: FormBuilder) { }
 
   ngOnInit(): void {
     this.initializeForm();
+    this.maxDate = new Date();
+
+    // Don't allow the user to pick a date less than 18 years ago (need to be 18 years and older)
+    this.maxDate.setFullYear(this.maxDate.getFullYear() -18);
   }
 
   initializeForm() {
