@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormControl, FormGroup, ValidatorFn, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { AccountService } from '../_services/account.service';
 
@@ -18,19 +18,33 @@ export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
 
   constructor(private accountService: AccountService,
-     private toastr: ToastrService) { }
+     private toastr: ToastrService, private fb: FormBuilder) { }
 
   ngOnInit(): void {
     this.initializeForm();
   }
 
   initializeForm() {
-    this.registerForm = new FormGroup({
-      // A FormGroup contains Form controls
-      username: new FormControl(),
-      password: new FormControl(),
-      confirmPassword: new FormControl()
+    this.registerForm = this.fb.group({
+      gender: ['male'],
+      username: ['', Validators.required],
+      knownAs: ['', Validators.required],
+      dateOfBirth: ['', Validators.required],
+      city: ['', Validators.required],
+      country: ['', Validators.required],
+      password: ['', [Validators.required, 
+        Validators.minLength(4), Validators.maxLength(8)]],
+      confirmPassword: ['', [Validators.required, this.matchValues('password')]]
     })
+  }
+
+  // Adding a custom validator. We compare a FormControl to another Control we "match to". In our case a password vs confirmPassword
+  // If the passwords match we return null, and validation is passed, and if it doesn't match it returns a validator error isMatching true and fails
+  matchValues(matchTo: string): ValidatorFn {
+    return (control: AbstractControl) => {
+      return control?.value === control?.parent?.controls[matchTo].value
+       ? null : {isMatching: true}
+    }
   }
 
   register() {
