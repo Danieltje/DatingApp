@@ -13,4 +13,6 @@ export interface User {
 
     // adding the photoUrl for the main photo we return in the nav
     photoUrl: string;
+    knownAs: string;
+    gender: string;
 }
