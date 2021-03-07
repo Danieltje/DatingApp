@@ -55,10 +55,10 @@ namespace API.Entities
         // so we can use that to calculate the age of a user and this is available when we need it
         // it will calculate the age based on the date of birth
         
-        // public int GetAge()
-        //{
-        //   we wrote the CalculateAge method in the DateTimeExtensions
-        //   return DateOfBirth.CalculateAge();
-        //}
+        // Who has liked the currently logged in user?
+        public ICollection<UserLike> LikedByUsers { get; set; }
+
+        // Which users has the current logged in user liked?
+        public ICollection<UserLike> LikedUsers { get; set; }
     }
 }
