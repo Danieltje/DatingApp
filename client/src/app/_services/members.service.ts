@@ -8,6 +8,7 @@ import { PaginatedResult } from '../_models/pagination';
 import { User } from '../_models/user';
 import { UserParams } from '../_models/userParams';
 import { AccountService } from './account.service';
+import { getPaginatedResult, getPaginationHeaders } from './paginationHelper';
 
 @Injectable({
   providedIn: 'root'
@@ -55,7 +56,7 @@ export class MembersService {
       return of(response);
     }
 
-    let params = this.getPaginationHeaders(userParams.pageNumber, userParams.pageSize);
+    let params = getPaginationHeaders(userParams.pageNumber, userParams.pageSize);
     
     params = params.append('minAge', userParams.minAge.toString());
     params = params.append('maxAge', userParams.maxAge.toString());
@@ -65,7 +66,7 @@ export class MembersService {
     
     // We need to pass up our parameters here. When we use http.get we get only the body of the response.
     // When we use observe it gets the full response
-    return this.getPaginatedResult<Member[]>(this.baseUrl + 'users', params)
+    return getPaginatedResult<Member[]>(this.baseUrl + 'users', params, this.http)
 
     // Use this pipe to transform the data we get back to cache the data
       .pipe(map(response => {
@@ -109,33 +110,10 @@ export class MembersService {
 
   // The predicate means what type of like you want to show: Liked, or LikedBy for the logged in user
   getLikes(predicate: string, pageNumber, pageSize) {
-    let params = this.getPaginationHeaders(pageNumber, pageSize);
+    let params = getPaginationHeaders(pageNumber, pageSize);
     params = params.append('predicate', predicate);
-    return this.getPaginatedResult<Partial<Member[]>>(this.baseUrl + 'likes', params);
+    return getPaginatedResult<Partial<Member[]>>(this.baseUrl + 'likes', params, this.http);
   }
 
-  private getPaginatedResult<T>(url, params) {
-    const paginatedResult: PaginatedResult<T> = new PaginatedResult<T>();
-
-     return this.http.get<T>(url, { observe: 'response', params }).pipe(
-     map(response => {
-       paginatedResult.result = response.body;
-       if (response.headers.get('Pagination') !== null) {
-         paginatedResult.pagination = JSON.parse(response.headers.get('Pagination'));
-       }
-       return paginatedResult;
-     })
-   );
- }
-
- private getPaginationHeaders(pageNumber: number, pageSize: number) {
- // this serializes our params, and we can add it to our query string
-   let params = new HttpParams();
-
- // Query string. Because the pageNumber is a string, we need to make the page toString()
-   params = params.append('pageNumber', pageNumber.toString());
-   params = params.append('pageSize', pageSize.toString());
-
-   return params;
- }
+  
 }
