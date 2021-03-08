@@ -60,5 +60,8 @@ namespace API.Entities
 
         // Which users has the current logged in user liked?
         public ICollection<UserLike> LikedUsers { get; set; }
+
+        public ICollection<Message> MessagesSent { get; set; }
+        public ICollection<Message> MessagesReceived { get; set; }
     }
 }
