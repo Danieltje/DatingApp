@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using API.Entities;
 
 namespace API.Interfaces
@@ -9,6 +10,6 @@ namespace API.Interfaces
     // in c# we always prefix interface with a capital I
     public interface ITokenService
     {
-        string CreateToken(AppUser user);
+        Task<string> CreateToken(AppUser user);
     }
 }

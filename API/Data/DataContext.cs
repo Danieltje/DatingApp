@@ -1,15 +1,19 @@
 using API.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data
 {
-    public class DataContext : DbContext
+    // You do need to install IdentityDbContext. It's an EF package.
+    // IdentityDbContext provides us with the tables we need to populate our database with Identity
+    public class DataContext : IdentityDbContext<AppUser, AppRole, int, 
+        IdentityUserClaim<int>, AppUserRole, IdentityUserLogin<int>, 
+        IdentityRoleClaim<int>, IdentityUserToken<int>>
     {
         public DataContext(DbContextOptions options) : base(options)
         {
         }
-
-        public DbSet<AppUser> Users { get; set; }
         
         // We need to do something with our Likes. With our photos for example we dont necessarily do something that's why no DbSet
         // We give this a table name of Likes. This will be a "join" table where we can run queries against
@@ -22,6 +26,20 @@ namespace API.Data
         {
             // If we don't do this we can sometimes get an error with the migration
             base.OnModelCreating(builder);
+
+            // Configure our relationship from our AppUser to our AppRole. This is one side of the relationship
+            builder.Entity<AppUser>()
+                .HasMany(ur => ur.UserRoles)
+                .WithOne(u => u.User)
+                .HasForeignKey(ur => ur.UserId)
+                .IsRequired();
+
+            // The other side of the relationship between AppUser and AppRole.
+            builder.Entity<AppRole>()
+                .HasMany(ur => ur.UserRoles)
+                .WithOne(u => u.Role)
+                .HasForeignKey(ur => ur.RoleId)
+                .IsRequired();
 
             // Work on our UserLike Entity here. We didn't configure a primary key, so we configure one ourselves.
             // The k is gonna represent the primary key for this particular table

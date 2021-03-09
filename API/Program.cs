@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using API.Data;
+using API.Entities;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,10 +34,13 @@ namespace API
                 // What it does; so far we've been using dotnet-ef database update to apply migrations.
                 // What we do from now on is just restart our application to apply any migration
                 // If you drop the database and restart the app, the database will be recreated
+
+                var userManager = services.GetRequiredService<UserManager<AppUser>>();
+                var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
                 await context.Database.MigrateAsync();
 
                 // seed the database with the Seed method
-                await Seed.SeedUsers(context);
+                await Seed.SeedUsers(userManager, roleManager);
             }
             catch(Exception ex)
             {

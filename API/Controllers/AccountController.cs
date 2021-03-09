@@ -7,6 +7,7 @@ using API.DTOs;
 using API.Entities;
 using API.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,16 +15,18 @@ namespace API.Controllers
 {
     public class AccountController : BaseApiController
     {
-        private readonly DataContext _context;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly SignInManager<AppUser> _signInManager;
 
         // We inject our TokenService into our AccountController
-        public AccountController(DataContext context, ITokenService tokenService, IMapper mapper)
+        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ITokenService tokenService, IMapper mapper)
         {
+            _signInManager = signInManager;
+            _userManager = userManager;
             _mapper = mapper;
             _tokenService = tokenService;
-            _context = context;
         }
 
         [HttpPost("register")]
@@ -39,24 +42,20 @@ namespace API.Controllers
 
             var user = _mapper.Map<AppUser>(registerDto);
 
-            using var hmac = new HMACSHA512();
+            var result = await _userManager.CreateAsync(user, registerDto.Password);
 
-            user.UserName = registerDto.Username.ToLower();
-            user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password));
-            user.PasswordSalt = hmac.Key;
-            
-            // Telling EF that we want to add this to our Users collection/table
-            // the .Add method means that we're tracking this entity now in EF
-            _context.Users.Add(user);
+            if (!result.Succeeded) return BadRequest(result.Errors);
 
-            // here we do call our database and save the user into the users table
-            await _context.SaveChangesAsync();
+            // Put any new user/member into the Member role
+            var roleResult = await _userManager.AddToRoleAsync(user, "Member");
+
+            if (!roleResult.Succeeded) return BadRequest(result.Errors);
 
             // return the user
             return new UserDto
             {
                 Username = user.UserName,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 //PhotoUrl = user.Photos?.FirstOrDefault(x => x.IsMain)?.Url,
                 KnownAs = user.KnownAs,
                 Gender = user.Gender
@@ -70,29 +69,22 @@ namespace API.Controllers
             // we use SingleOrDefaultAsync because this method also throws an exception
             // FindAsync is only useful if we're getting something with a primary key
             // It looks if we got a user in our database, or it does not have one
-            var user = await _context.Users
+            var user = await _userManager.Users
                 // we need to eagerly load our photos here to prevent source is empty error
                 .Include(p => p.Photos)
-                .SingleOrDefaultAsync(x => x.UserName == loginDto.Username.ToLowerInvariant());
+                .SingleOrDefaultAsync(x => x.UserName == loginDto.Username.ToLower());
 
             if (user == null) return Unauthorized("Invalid username!");
+            
+            var result = await _signInManager
+                .CheckPasswordSignInAsync(user, loginDto.Password, false);
 
-            // doing the reverse we did with the register method
-            // we take the key we made in the register. This is the Salt
-            using var hmac = new HMACSHA512(user.PasswordSalt);
-
-            // now we need to work out the hash that's in the password in the loginDto
-            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
-
-            for (int i = 0; i < computedHash.Length; i++)
-            {
-                if (computedHash[i] != user.PasswordHash[i]) return Unauthorized("Invalid password!");
-            }
-
+            if (!result.Succeeded) return Unauthorized();
+            
             return new UserDto
             {
                 Username = user.UserName,
-                Token = _tokenService.CreateToken(user),
+                Token = await _tokenService.CreateToken(user),
                 PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
                 KnownAs = user.KnownAs,
                 Gender = user.Gender
@@ -102,7 +94,7 @@ namespace API.Controllers
         private async Task<bool> UserExists(string username)
         {
             // writing a method to see if there's already an entry in the database with our username
-            return await _context.Users.AnyAsync(x => x.UserName == username.ToLower());
+            return await _userManager.Users.AnyAsync(x => x.UserName == username.ToLower());
         }
 
     }

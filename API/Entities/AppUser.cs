@@ -1,19 +1,14 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
 
 namespace API.Entities
 {
-    public class AppUser
+    /* We're deriving from an Identity IdentityUser class. .NET comes with the Identity packages, so just using it on top.
+       The default uses a string as a primary key, but we use an int as a primary key
+    */ 
+    public class AppUser : IdentityUser<int>
     {
-        public int Id { get; set; }
-        public string UserName { get; set; }
-
-        // Storing the hashed password as a byte array
-        public byte[] PasswordHash { get; set; }
-
-        // Storing the salted password as a byte array
-        public byte[] PasswordSalt { get; set; }
-
         // property to save the date of birth of the user
         public DateTime DateOfBirth { get; set; }
 
@@ -63,5 +58,9 @@ namespace API.Entities
 
         public ICollection<Message> MessagesSent { get; set; }
         public ICollection<Message> MessagesReceived { get; set; }
+
+        // This is also specified in AppRole.cs and is part of the relationship.
+        // Our AppUserRole is acting as our join table.
+        public ICollection<AppUserRole> UserRoles { get; set; }
     }
 }
