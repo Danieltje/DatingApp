@@ -43,6 +43,12 @@ namespace API.Extensions
                     // our angular client for now
                     ValidateAudience = false
                 };
+            });
+
+            services.AddAuthorization(opt =>
+            {
+                opt.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
+                opt.AddPolicy("ModeratePhotoRole", policy => policy.RequireRole("Admin", "Moderator"));
             });              
 
             return services;
