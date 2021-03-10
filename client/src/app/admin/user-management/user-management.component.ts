@@ -34,7 +34,16 @@ export class UserManagementComponent implements OnInit {
       }
     }
     this.bsModalRef = this.modalService.show(RolesModalComponent, config);
-    this.bsModalRef.content.closeBtnName = 'Close';
+    this.bsModalRef.content.updateSelectedRoles.subscribe(values => {
+      const rolesToUpdate = {
+        roles: [...values.filter(el => el.checked === true).map(el => el.name)]
+      };
+      if (rolesToUpdate) {
+        this.adminService.updateUserRoles(user.username, rolesToUpdate.roles).subscribe(() => {
+          user.roles = [...rolesToUpdate.roles]
+        })
+      }
+    })
   }
 
   // Loop over these available roles, and find out if they are X role, and check that checkbox.
