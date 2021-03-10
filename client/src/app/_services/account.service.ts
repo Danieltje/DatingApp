@@ -64,6 +64,9 @@ export class AccountService {
 
   setCurrentUser(user: User) {
     // .next is used to set the value inside of the ReplaySubject object Observable
+    user.roles = [];
+    const roles = this.getDecodedToken(user.token).role;
+    Array.isArray(roles) ? user.roles = roles : user.roles.push(roles);
     localStorage.setItem('user', JSON.stringify(user));
     this.currentUserSource.next(user);
   }
@@ -71,5 +74,12 @@ export class AccountService {
   logout() {
     localStorage.removeItem('user');
     this.currentUserSource.next(null);
+  }
+
+  // A method to go and get the decoded token. For the admin functionality in the client.
+  // We're not decoding anything really, just getting the information inside the token.
+  // The token comes in 3 parts, header, payload, and the signature. We need the payload.
+  getDecodedToken(token) {
+    return JSON.parse(atob(token.split('.')[1]));
   }
 }
