@@ -17,7 +17,7 @@ namespace API.Entities
         public DateTime? DateRead { get; set; }
 
         // As soon as we create a new instance of this, we set the time to the current server timestamp.
-        public DateTime MessageSent { get; set; } = DateTime.Now;
+        public DateTime MessageSent { get; set; } = DateTime.UtcNow;
         public bool SenderDeleted { get; set; }
         public bool RecipientDeleted { get; set; }
     }

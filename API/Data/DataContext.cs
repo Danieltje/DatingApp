@@ -18,8 +18,9 @@ namespace API.Data
         // We need to do something with our Likes. With our photos for example we dont necessarily do something that's why no DbSet
         // We give this a table name of Likes. This will be a "join" table where we can run queries against
         public DbSet<UserLike> Likes { get; set; }
-
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<Connection> Connections { get; set; }
 
         /* Give the entities some configuration. We need to override a method inside the DbContext */
         protected override void OnModelCreating(ModelBuilder builder)

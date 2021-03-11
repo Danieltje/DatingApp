@@ -55,5 +55,18 @@ namespace API.SignalR
 
             return Task.FromResult(onlineUsers);
         }
+
+        /* Create a method that can get a list of Connections for a particular User that's stored inside the Dictionary  */
+        public Task<List<string>> GetConnectionsForUser(string username)
+        {
+            List<string> connectionIds;
+            lock(OnlineUsers)
+            {
+                // If we have a Dictionary element with a key of username, return the connectionIds of that particular user.
+                connectionIds = OnlineUsers.GetValueOrDefault(username);
+            }
+
+            return Task.FromResult(connectionIds);
+        }
     }
 }
