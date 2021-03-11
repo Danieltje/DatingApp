@@ -39,20 +39,23 @@ namespace API.SignalR
         // It doesn't matter though who's in the group at that moment, or if none is, etc. It stays just a group.
         var groupName = GetGroupName(Context.User.GetUsername(), otherUser);
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
-        await AddToGroup(Context, groupName);
+        var group = await AddToGroup(groupName);
+        await Clients.Group(groupName).SendAsync("UpdatedGroup", group);
 
         // When a user joins a group, we will do...
-        var messages = await _messageRepository.GetMessageThread(Context.User.GetUsername(), otherUser);
+        var messages = await _messageRepository.
+            GetMessageThread(Context.User.GetUsername(), otherUser);
 
         // Send the message thread to both of the users
-        await Clients.Group(groupName).SendAsync("ReceiveMessageThread", messages);
+        await Clients.Caller.SendAsync("ReceiveMessageThread", messages);
     }
 
     public override async Task OnDisconnectedAsync(Exception exception)
     {
         // When a user connects or disconnects and they are a member of the group, they automatically get removed from that group.
         // One of the advantages of creating a new hub for the messages.
-        await RemoveFromMessageGroup(Context.ConnectionId);
+       var group = await RemoveFromMessageGroup();
+        await Clients.Group(group.Name).SendAsync("UpdatedGroup", group);
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -110,7 +113,7 @@ namespace API.SignalR
        The result of this, is that we have something to do when a user connects to a hub,
        and the method below is when a user disconnects from a hub.
      */
-    private async Task<bool> AddToGroup(HubCallerContext context, string groupName)
+    private async Task<Group> AddToGroup(string groupName)
     {
         var group = await _messageRepository.GetMessageGroup(groupName);
         var connection = new Connection(Context.ConnectionId, Context.User.GetUsername());
@@ -123,14 +126,19 @@ namespace API.SignalR
 
         group.Connections.Add(connection);
 
-        return await _messageRepository.SaveAllAsync();
+        if (await _messageRepository.SaveAllAsync()) return group;
+
+        throw new HubException("Failed to join group");
     }
 
-    private async Task RemoveFromMessageGroup(string connectionId)
+    private async Task<Group> RemoveFromMessageGroup()
     {
-        var connection = await _messageRepository.GetConnection(connectionId);
+        var group = await _messageRepository.GetGroupForConnection(Context.ConnectionId);
+        var connection = group.Connections.FirstOrDefault(x => x.ConnectionId == Context.ConnectionId);
         _messageRepository.RemoveConnection(connection);
-        await _messageRepository.SaveAllAsync();
+       if (await _messageRepository.SaveAllAsync()) return group;
+
+       throw new HubException("Failed to remove from group");
     }
 
     // The group name is always gonna be alphabetical order for both the caller and the other.
