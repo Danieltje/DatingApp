@@ -80,20 +80,20 @@ namespace API.Data
             .SingleOrDefaultAsync(x => x.UserName == username);
         }
 
+        public async Task<string> GetUserGender(string username)
+        {
+            return await _context.Users
+                .Where(x => x.UserName == username)
+                .Select(x => x.Gender)
+                .FirstOrDefaultAsync();
+        }
+
         // method to return all of our users
         public async Task<IEnumerable<AppUser>> GetUsersAsync()
         {
             return await _context.Users
             .Include(p => p.Photos)
             .ToListAsync();
-        }
-
-        // we return a bool to say if our changes have been saved
-        // we want to save when something has changed; a value greater than 0
-        // the SaveChanges method returns an integer for the number of changes made
-        public async Task<bool> SaveAllAsync()
-        {
-            return await _context.SaveChangesAsync() > 0;
         }
 
         /* We're "updating" the user here. Not changing anything in the database, but we mark this

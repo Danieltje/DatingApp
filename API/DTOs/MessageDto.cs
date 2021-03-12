@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace API.DTOs
 {
@@ -16,5 +17,12 @@ namespace API.DTOs
         // Make it optional with ?, we want to make it null when the message has not been read.
         public DateTime? DateRead { get; set; }
         public DateTime MessageSent { get; set; }
+
+        [JsonIgnore]
+        // Those won't be send back to the client, but we will use them inside the Repository
+        public bool SenderDeleted { get; set; }
+
+        [JsonIgnore]
+        public bool RecipientDeleted { get; set; }
     }
 }
